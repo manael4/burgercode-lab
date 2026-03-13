@@ -5,7 +5,6 @@ pipeline {
         stage('Checkout (Ingredientes)') {
             steps {
                 echo 'Descargando la receta de BurgerCode...'
-                // Descarga el código desde el repositorio configurado en Jenkins
                 checkout scm
             }
         }
@@ -13,7 +12,6 @@ pipeline {
         stage('Build (Cocinar)') {
             steps {
                 echo 'Cocinando la imagen Docker...'
-                // Crea la imagen de Docker usando el Dockerfile del repo
                 sh 'docker build -t burgercode-app .'
             }
         }
@@ -21,7 +19,7 @@ pipeline {
         stage('Test (Control de Calidad)') {
             steps {
                 echo 'Probando la hamburguesa...'
-                // Ejecuta el test.py dentro del contenedor recién creado
+                // Ejecutamos el test dentro del contenedor recién creado [cite: 108, 110]
                 sh 'docker run --rm burgercode-app python test.py'
             }
         }
@@ -29,12 +27,27 @@ pipeline {
         stage('Deploy (Entrega)') {
             steps {
                 echo 'Desplegando en Producción...'
-                // Elimina el contenedor anterior si existe para evitar conflictos
+                // Limpiamos el contenedor anterior si existe [cite: 117]
                 sh 'docker rm -f burger-prod || true'
-                // Lanza la nueva versión en el puerto 5000
+                // Desplegamos la nueva versión en el puerto 5000 [cite: 118]
                 sh 'docker run -d --name burger-prod -p 5000:5000 burgercode-app'
                 echo '¡Hamburguesa servida en http://localhost:5000!'
             }
+        }
+    }
+
+    // El bloque post gestiona la limpieza y notificaciones finales [cite: 175]
+    post {
+        always {
+            echo 'Limpiando la cocina...'
+            // Borra imágenes intermedias para ahorrar espacio [cite: 178]
+            sh 'docker image prune -f'
+        }
+        success {
+            echo '🎉 ¡Pipeline completado con éxito!'
+        }
+        failure {
+            echo '🚑 ¡ALERTA! El pipeline ha fallado. Revisar logs.'
         }
     }
 }
